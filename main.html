@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    .header {
+      width: 100%;
+      background-color: #0a3d62;
+      color: white;
+      text-align: center;
+      padding: 10px 0;
+    }
+    .logo {
+      max-width: 100px;
+    }
+    .container {
+      display: flex;
+      width: 100%;
+      flex: 1;
+    }
+    .logs-section {
+      width: 25%;
+      background-color: #ffffff;
+      padding: 10px;
+      overflow-y: auto;
+      border-right: 1px solid #ccc;
+    }
+    .log-entry {
+      display: flex;
+      align-items: center;
+      padding: 5px;
+      border-bottom: 1px solid #ccc;
+    }
+    .log-entry .state {
+      width: 10px;
+      height: 100%;
+      margin-right: 10px;
+    }
+    .form-section {
+      width: 75%;
+      background-color: #ffffff;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #0a3d62;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 80%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .form-group button {
+      background-color: #0a3d62;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .form-group button:hover {
+      background-color: #05445e;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <img src="https://mycontent.agency/wp-content/uploads/2021/03/Logo_MyContent_Original_Mesa-de-trabajo-1@300x.png" alt="Logo My Content Agency" class="logo">
+  </div>
+  <div class="container">
+    <div class="logs-section" id="logs">
+      <!-- Logs will be dynamically loaded here -->
+    </div>
+    <div class="form-section">
+      <form id="updateForm">
+        <div class="form-group">
+          <label for="closer">Closer</label>
+          <input type="text" id="closer" name="closer" disabled>
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <select id="email" name="email" onchange="loadEmailData(this.value)">
+            <option value="">Seleccione un correo</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="phone">Telefono</label>
+          <input type="text" id="phone" name="phone">
+        </div>
+        <div class="form-group">
+          <label for="whatsapp">Boton WA</label>
+          <button type="button" id="whatsapp">WhatsApp</button>
+        </div>
+        <div class="form-group">
+          <label for="emailButton">Enviar Mail</label>
+          <button type="button" id="emailButton">Correo</button>
+        </div>
+        <div class="form-group">
+          <label for="agendacion">Fecha de Agendacion</label>
+          <input type="text" id="agendacion" name="agendacion" disabled>
+        </div>
+        <div class="form-group">
+          <label for="state">Estado</label>
+          <select id="state" name="state">
+            <option value="Pendiente contacto" style="color: lightgreen;">Pendiente contacto</option>
+            <option value="Pendiente respuesta" style="color: lightgreen;">Pendiente respuesta</option>
+            <option value="Nurturing por llamada" style="color: lightblue;">Nurturing por llamada</option>
+            <option value="Seguimiento por llamada" style="color: brown;">Seguimiento por llamada</option>
+            <option value="No show (Intento Reagendacion)" style="color: orange;">No show (Intento Reagendacion)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="called">Llamada realizada</label>
+          <select id="called" name="called">
+            <option value="Si">Si</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="tracking">Fecha de seguimiento</label>
+          <input type="text" id="tracking" name="tracking" disabled>
+        </div>
+        <div class="form-group">
+          <label for="comments">Comentarios</label>
+          <textarea id="comments" name="comments"></textarea>
+        </div>
+        <div class="form-group">
+          <button type="button" onclick="updateStatus()">Cambiar Estado</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script>
+  window.onload = function() {
+    // Load initial data
+    // loadLogs();
+
+    google.script.run.withSuccessHandler(function(data) {
+      document.getElementById('closer').value = data.closer; // Set the Closer value
+      document.getElementById('phone').value = data.phone;
+      document.getElementById('agendacion').value = data.agendacion;
+      document.getElementById('state').value = data.state;
+      document.getElementById('called').value = data.called;
+      document.getElementById('tracking').value = data.tracking;
+      document.getElementById('comments').value = data.comments;
+    }).getInitialData();
+
+    // Retrieve the selected closer from user properties
+    google.script.run.withSuccessHandler(function(selectedCloser) {
+      document.getElementById('closer').value = selectedCloser;
+      loadEmails(selectedCloser);
+    }).getSelectedCloser();
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    loadLogs();
+  });
+
+  function loadLogs() {
+    google.script.run.withSuccessHandler(onLogsLoaded).getLogs();
+  }
+
+  function loadLogs() {
+    google.script.run.withSuccessHandler(onLogsLoaded).getLogs();
+  }
+
+  function onLogsLoaded(logs) {
+  console.log("Received logs data:", logs);
+  var logsArray = JSON.parse(logs); // Parse the JSON string to an array of objects
+  if (logsArray.length === 0) {
+    console.log("No logs data received or empty logs array.");
+    return;
+  }
+  
+  var logsContainer = document.getElementById('logs');
+  logsContainer.innerHTML = ''; // Clear existing logs
+  
+  logsArray.forEach(function(log) {
+    var logEntry = document.createElement('div');
+    logEntry.className = 'log-entry';
+    logEntry.innerHTML = `
+      <div class="state" style="background-color: ${getStateColor(log.state)};"></div>
+      <div>
+        <div><strong>${log.date}</strong></div>
+        <div>${log.closer}</div>
+        <div>${log.state}</div>
+      </div>
+    ` ;
+    logsContainer.appendChild(logEntry);
+  });
+}
+
+  function getStateColor(state) {
+    switch (state) {
+      case 'Pendiente contacto':
+      case 'Pendiente respuesta':
+        return 'lightgreen';
+      case 'Nurturing por llamada':
+        return 'lightblue';
+      case 'Seguimiento por llamada':
+        return 'brown';
+      case 'No show (Intento Reagendacion)':
+        return 'orange';
+      default:
+        return 'grey';
+    }
+  }
+
+  function loadEmails(closer) {
+    google.script.run.withSuccessHandler(function(emails) {
+      var emailSelect = document.getElementById('email');
+      emailSelect.innerHTML = '<option value="">Seleccione un correo</option>'; // Clear existing options
+      emails.forEach(function(email) {
+        var option = document.createElement('option');
+        option.value = email;
+        option.text = email;
+        emailSelect.appendChild(option);
+      });
+    }).getEmailsForCloser(closer);
+  }
+
+  function loadEmailData(email) {
+  console.log("loadEmailData called with email:", email);
+  if (email) {
+    google.script.run.withSuccessHandler(onSuccess).getDataForEmail(email);
+  }
+}
+
+function onSuccess(data) {
+  console.log("onSuccess called with data:", data);
+  if (data && data.data) {
+    try {
+      const jsonData = JSON.parse(data.data);
+      console.log(jsonData);
+      updateFormFields(jsonData);
+    } catch (e) {
+      console.error("Error parsing JSON:", e);
+    }
+  } else {
+    alert("No data found for the selected email :)");
+  }
+}
+
+function updateFormFields(data) {
+  if (!data) {
+    console.error("Invalid data:", data);
+    return;
+  }
+  try {
+    document.getElementById('agendacion').value = data.agendacion;
+    document.getElementById('phone').value = data.phone;
+    document.getElementById('state').value = data.state;
+    document.getElementById('called').value = data.called;
+    document.getElementById('tracking').value = data.tracking;
+    document.getElementById('comments').value = data.comments;
+  } catch (e) {
+    console.error("Error updating form fields:", e);
+  }
+}
+
+
+  function updateStatus() {
+    var closer = document.getElementById('closer').value;
+    var email = document.getElementById('email').value;
+    var phone = document.getElementById('phone').value;
+    var state = document.getElementById('state').value;
+    var called = document.getElementById('called').value;
+    var tracking = new Date().toLocaleString();
+    var comments = document.getElementById('comments').value;
+    
+    google.script.run.withSuccessHandler(function() {
+      loadLogs();
+    }).updateSheet(closer, email, phone, state, called, tracking, comments);
+  }
+  </script>
+</body>
+</html>

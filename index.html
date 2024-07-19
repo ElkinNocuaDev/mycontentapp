@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f0f0;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    .form-container {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      margin: auto;
+    }
+    .form-container h2 {
+      color: #0a3d62;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #0a3d62;
+    }
+    input, select {
+      width: 80%;
+      padding: 10px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #0a3d62;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #05445e;
+    }
+    .logo {
+      max-width: 100px;
+      margin-bottom: 20px;
+    }
+  </style>
+  <script>
+  function ingresar() {
+    var closer = document.getElementById('closer').value;
+    google.script.run.withSuccessHandler(loadMainPage).processCloser(closer);
+  }
+
+  function loadMainPage() {
+    google.script.run.withSuccessHandler(function(htmlContent) {
+      document.open();
+      document.write(htmlContent);
+      document.close();
+    }).loadMainPage();
+  }
+
+  function loadClosers() {
+    google.script.run.withSuccessHandler(function(closers) {
+      var select = document.getElementById('closer');
+      closers.forEach(function(closer) {
+        var option = document.createElement('option');
+        option.value = closer;
+        option.text = closer;
+        select.appendChild(option);
+      });
+    }).getClosers();
+  }
+
+  window.onload = loadClosers;
+</script>
+
+</head>
+<body>
+  <div class="form-container">
+    <img src="https://mycontent.agency/wp-content/uploads/2021/03/Logo_MyContent_Original_Mesa-de-trabajo-1@300x.png" alt="Logo My Content Agency" class="logo">
+    <h2>Seleccionar Closer</h2>
+    <p>Seleccione su nombre:</p>
+    <select id="closer"></select>
+    <br><br>
+    <button onclick="ingresar()">Ingresar</button>
+  </div>
+</body>
+</html>
